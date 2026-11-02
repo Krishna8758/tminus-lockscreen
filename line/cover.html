@@ -1,0 +1,55 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="_line.css">
+<style>
+  html,body{width:1800px;height:1200px}
+  .board{width:1800px;height:1200px;padding:96px 104px;display:flex;gap:96px;align-items:stretch}
+  .L{flex:1;display:flex;flex-direction:column}
+  .R{flex:1.12;display:flex;flex-direction:column;justify-content:center}
+  .chip{font-size:26px;padding:8px 18px}
+  .dest{font-size:84px;margin-top:24px}
+  .rule{height:4px;margin:30px 0 28px}
+  .count b{font-size:196px}
+  .count i{font-size:32px;margin-left:22px;line-height:1.12}
+  .service{margin-top:auto;padding:24px 0;display:grid;gap:12px}
+  .service .k{font-size:21px}
+  .service .v{font-size:27px;margin-top:3px}
+  .legend{gap:30px;margin-top:22px;font-size:21px}
+  .legend i{width:17px;height:17px;border-width:5px;margin-right:9px}
+  .stop{grid-template-columns:78px 1fr;height:146px}
+  .rail::before{width:13px}
+  .dot{width:36px;height:36px;border-width:8px}
+  .stop.term .dot{width:48px;height:48px;border-width:10px}
+  .name{font-size:38px}
+  .meta{font-size:23px;margin-top:4px}
+  .youare{grid-template-columns:78px 1fr;height:82px}
+  .youare .rail::before{width:13px}
+  .flag{font-size:21px;padding:6px 14px}
+</style>
+<div class="board">
+  <div class="L">
+    <div><span class="chip">Line 10H</span></div>
+    <div class="dest">To your first<br>paid task</div>
+    <div class="rule"></div>
+    <div class="count"><b>4</b><i>stops<br>to go</i></div>
+    <div class="service"><div><div class="k">Service</div><div class="v">Running — no scheduled arrival</div></div></div>
+    <div class="legend">
+      <span><i style="background:#15171a;border-color:#15171a"></i>passed</span>
+      <span><i style="background:#f26b21;border-color:#f26b21"></i>next</span>
+      <span><i style="background:#f1f2ef;border-color:#c8ccc9"></i>ahead</span>
+    </div>
+  </div>
+  <div class="R"><div class="route">
+    <div class="stop done"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">Profile complete</div><div class="meta">Nov 2 · career interests, degree, work auth</div></div></div>
+    <div class="youare"><div class="rail"></div><div><span class="flag">You are here</span></div></div>
+    <div class="stop here"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">Matched to a project</div><div class="meta">Waiting · Handshake picks, not me</div></div></div>
+    <div class="stop ahead"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">Assessment passed</div><div class="meta">50–60 min, project-specific</div></div></div>
+    <div class="stop ahead"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">First task submitted</div><div class="meta">Tasks open with little notice</div></div></div>
+    <div class="stop ahead term"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">10 billable hours</div><div class="meta">Terminus · first payout clears</div></div></div>
+  </div></div>
+</div>

@@ -10,6 +10,8 @@ Two lock screens, two ways of reading a deadline:
 - `/` — **T-Minus**: the digit version. `T−21 DAYS` plus a live `HH:MM:SS`.
 - `/calendar/` — **Days Left**: the tear-off version. The days left are squares
   you count, not a number you read. Risograph on newsprint.
+- `/line/` — **Line 10H**: for a deadline with no date. The stops are fixed,
+  the arrival time isn't. Transit diagram.
 
 ## What it does
 

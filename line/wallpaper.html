@@ -1,0 +1,63 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="_line.css">
+<style>
+  html,body{width:1170px;height:2532px}
+  .board{width:1170px;height:2532px;padding:430px 96px 270px;display:flex;flex-direction:column}
+  .chip{font-size:30px;padding:9px 20px}
+  .dest{font-size:76px;margin-top:26px}
+  .rule{height:4px;margin:34px 0 32px}
+  .count b{font-size:168px}
+  .count i{font-size:34px;margin-left:22px;line-height:1.12}
+  .route{margin-top:48px}
+  .stop{grid-template-columns:86px 1fr;height:168px}
+  .rail::before{width:14px}
+  .dot{width:40px;height:40px;border-width:9px}
+  .stop.term .dot{width:52px;height:52px;border-width:11px}
+  .name{font-size:42px}
+  .meta{font-size:25px;margin-top:5px}
+  .youare{grid-template-columns:86px 1fr;height:92px}
+  .youare .rail::before{width:14px}
+  .flag{font-size:23px;padding:7px 16px}
+  .service{margin-top:44px;padding:26px 0;display:grid;grid-template-columns:1fr;gap:14px}
+  .service .k{font-size:23px}
+  .service .v{font-size:29px;margin-top:3px}
+  .legend{gap:34px;margin-top:26px;font-size:23px}
+  .legend i{width:19px;height:19px;border-width:5px;margin-right:10px}
+  .sig{margin-top:auto;font-size:22px}
+</style>
+<div class="board">
+  <div><span class="chip">Line 10H</span></div>
+  <div class="dest">To your first<br>paid task</div>
+  <div class="rule"></div>
+  <div class="count"><b>4</b><i>stops<br>to go</i></div>
+
+  <div class="route">
+    <div class="stop done"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">Profile complete</div><div class="meta">Nov 2 · career interests, degree, work auth</div></div></div>
+
+    <div class="youare"><div class="rail"></div><div><span class="flag">You are here</span></div></div>
+
+    <div class="stop here"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">Matched to a project</div><div class="meta">Waiting · Handshake picks, not me</div></div></div>
+
+    <div class="stop ahead"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">Assessment passed</div><div class="meta">50–60 min, project-specific</div></div></div>
+
+    <div class="stop ahead"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">First task submitted</div><div class="meta">Tasks open with little notice</div></div></div>
+
+    <div class="stop ahead term"><div class="rail"><div class="dot"></div></div>
+      <div><div class="name">10 billable hours</div><div class="meta">Terminus · first payout clears</div></div></div>
+  </div>
+
+  <div class="service">
+    <div><div class="k">Service</div><div class="v">Running — no scheduled arrival</div></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:#15171a;border-color:#15171a"></i>passed</span>
+    <span><i style="background:#f26b21;border-color:#f26b21"></i>next</span>
+    <span><i style="background:#f1f2ef;border-color:#c8ccc9"></i>ahead</span>
+  </div>
+  <div class="sig"><span>K. Sojitra</span><span>Handshake AI</span></div>
+</div>

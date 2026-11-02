@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Line 10H — a transit map for a deadline</title>
+<meta name="description" content="A lock screen for a deadline you don't control: the stops are fixed, the arrival time isn't.">
+<meta name="color-scheme" content="light">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="_line.css">
+<style>
+  body{background:#e3e5e2;font-family:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink)}
+  .page{max-width:1180px;margin:0 auto;padding:36px 22px 70px}
+  .mast{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 20px;margin-bottom:28px}
+  .mast h1{font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:700;font-size:34px;
+           text-transform:uppercase;letter-spacing:.01em}
+  .mast h1 em{font-style:normal;color:var(--line)}
+  .mast p{color:#4c525a;font-size:15px;max-width:60ch;font-weight:500}
+
+  .frame{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:38px;align-items:start}
+  @media (max-width:880px){.frame{grid-template-columns:minmax(0,1fr)}}
+
+  .device{width:100%;max-width:330px;margin:0 auto;aspect-ratio:1170/2532;
+          border:3px solid var(--ink);border-radius:26px;overflow:hidden}
+  .device .board{width:100%;height:100%;padding:17% 8.2% 10.7%;display:flex;flex-direction:column}
+  .device .chip{font-size:8.5px;padding:3px 7px}
+  .device .dest{font-size:21px;margin-top:8px}
+  .device .rule{height:2px;margin:11px 0 10px}
+  .device .count b{font-size:47px}
+  .device .count i{font-size:9.5px;margin-left:7px;line-height:1.12}
+  .device .route{margin-top:14px}
+  .device .stop{grid-template-columns:25px 1fr;height:47px}
+  .device .rail::before{width:4px}
+  .device .dot{width:11px;height:11px;border-width:3px}
+  .device .stop.term .dot{width:15px;height:15px;border-width:3px}
+  .device .name{font-size:12px}
+  .device .meta{font-size:7.5px;margin-top:1px}
+  .device .youare{grid-template-columns:25px 1fr;height:26px}
+  .device .youare .rail::before{width:4px}
+  .device .flag{font-size:7px;padding:2px 5px}
+  .device .service{margin-top:13px;padding:8px 0;border-width:2px}
+  .device .service .k{font-size:7px}
+  .device .service .v{font-size:9.5px;margin-top:1px}
+  .device .legend{gap:10px;margin-top:8px;font-size:7px}
+  .device .legend i{width:6px;height:6px;border-width:2px;margin-right:4px}
+  .device .sig{margin-top:auto;font-size:6.5px}
+
+  .rail-panel{display:flex;flex-direction:column;gap:22px;min-width:0}
+  .block{background:var(--ground);border:3px solid var(--ink);padding:20px}
+  .block h2{font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:700;font-size:21px;
+            text-transform:uppercase;letter-spacing:.03em}
+  .block .note{font-size:14px;color:#4c525a;margin:3px 0 16px;font-weight:500}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .field label{font-family:'Barlow Condensed',Barlow,sans-serif;font-size:13px;font-weight:700;
+               letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  input[type=text]{font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);background:#fff;
+    border:2px solid var(--ink);padding:9px 11px;width:100%;border-radius:0}
+  input:focus-visible,button:focus-visible{outline:3px solid var(--line);outline-offset:2px}
+  .stoprow{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1fr);gap:9px;align-items:center;margin-bottom:9px}
+  .stoprow .at{width:34px;height:34px;border:2px solid var(--ink);background:var(--ground);
+               cursor:pointer;font-family:'Barlow Condensed',Barlow,sans-serif;font-weight:700;font-size:14px;padding:0}
+  .stoprow .at[aria-pressed="true"]{background:var(--line);border-color:var(--line);color:#fff}
+  .btnrow{display:flex;flex-wrap:wrap;gap:9px}
+  button{font-family:'Barlow Condensed',Barlow,sans-serif;font-size:15px;font-weight:700;letter-spacing:.1em;
+         text-transform:uppercase;border:2px solid var(--ink);background:var(--ground);color:var(--ink);
+         padding:10px 16px;cursor:pointer;border-radius:0}
+  button:hover{background:var(--ink);color:var(--ground)}
+  button.primary{background:var(--line);border-color:var(--line);color:#fff}
+  button.primary:hover{background:var(--ink);border-color:var(--ink)}
+  ol.howto{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:#4c525a;font-weight:500}
+  footer{margin-top:34px;border-top:3px solid var(--ink);padding-top:14px;display:flex;flex-wrap:wrap;
+         gap:8px 18px;justify-content:space-between;font-family:'Barlow Condensed',Barlow,sans-serif;
+         font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  footer a{color:var(--line)}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <h1>Line <em>10H</em></h1>
+    <p>Some deadlines have no date. You can't schedule the arrival — you can only know which stop you're at. This draws that as a line.</p>
+  </header>
+
+  <div class="frame">
+    <div class="device">
+      <div class="board">
+        <div><span class="chip" id="chipEl">Line 10H</span></div>
+        <div class="dest" id="destEl">&nbsp;</div>
+        <div class="rule"></div>
+        <div class="count"><b id="nEl">0</b><i id="unitEl">stops<br>to go</i></div>
+        <div class="route" id="routeEl"></div>
+        <div class="service"><div><div class="k">Service</div><div class="v" id="svcEl">&nbsp;</div></div></div>
+        <div class="legend">
+          <span><i style="background:#15171a;border-color:#15171a"></i>passed</span>
+          <span><i style="background:#f26b21;border-color:#f26b21"></i>next</span>
+          <span><i style="background:#f1f2ef;border-color:#c8ccc9"></i>ahead</span>
+        </div>
+        <div class="sig"><span id="whoEl">&nbsp;</span><span id="sysEl">&nbsp;</span></div>
+      </div>
+    </div>
+
+    <div class="rail-panel">
+      <section class="block">
+        <h2>The line</h2>
+        <p class="note">Name it, say where it ends up, and what the service status is right now.</p>
+        <div class="field"><label for="chip">Line name</label><input type="text" id="chip" maxlength="14"></div>
+        <div class="field"><label for="d1">Destination, line one</label><input type="text" id="d1" maxlength="18"></div>
+        <div class="field"><label for="d2">Destination, line two</label><input type="text" id="d2" maxlength="18"></div>
+        <div class="field"><label for="svc">Service status</label><input type="text" id="svc" maxlength="40"></div>
+        <div class="field"><label for="who">Signature</label><input type="text" id="who" maxlength="18"></div>
+        <div class="field"><label for="sys">System</label><input type="text" id="sys" maxlength="18"></div>
+        <div class="btnrow"><button class="primary" id="apply">Apply</button><button id="reset">Reset</button></div>
+      </section>
+
+      <section class="block">
+        <h2>Stops</h2>
+        <p class="note">In order, first to terminus. Click the number to mark where you are now — everything above it counts as passed.</p>
+        <div id="stops"></div>
+      </section>
+
+      <section class="block">
+        <h2>Put it on your phone</h2>
+        <ol class="howto">
+          <li>Open this on the phone and screenshot the panel. Top and bottom are left empty so the clock and the torch and camera buttons cover nothing.</li>
+          <li>Set the screenshot as your lock screen.</li>
+          <li>Move the marker down a stop when you actually reach one. That's the whole ritual.</li>
+        </ol>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <span>Diagram, not a map · one HTML file</span>
+    <span><a href="../">T-Minus</a> · <a href="../calendar/">Days Left</a></span>
+  </footer>
+</div>
+
+<script>
+var KEY="line10h.v1";
+var DEF={chip:"Line 10H", d1:"To your first", d2:"paid task",
+  svc:"Running — no scheduled arrival", who:"K. Sojitra", sys:"Handshake AI", at:0,
+  stops:[
+    {n:"Profile complete",   m:"Career interests, degree, work auth"},
+    {n:"Matched to a project", m:"Waiting · Handshake picks, not me"},
+    {n:"Assessment passed",  m:"50–60 min, project-specific"},
+    {n:"First task submitted", m:"Tasks open with little notice"},
+    {n:"10 billable hours",  m:"Terminus · first payout clears"}
+  ]};
+var S=load();
+function load(){ try{var v=JSON.parse(localStorage.getItem(KEY)); if(v&&Array.isArray(v.stops)&&v.stops.length) return v;}catch(e){} return JSON.parse(JSON.stringify(DEF)); }
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+
+function el(tag, cls, txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+
+function render(){
+  document.getElementById("chipEl").textContent = S.chip;
+  document.getElementById("destEl").innerHTML =
+    (S.d1||"").replace(/</g,"&lt;") + "<br>" + (S.d2||"").replace(/</g,"&lt;");
+  document.getElementById("svcEl").textContent = S.svc;
+  document.getElementById("whoEl").textContent = S.who;
+  document.getElementById("sysEl").textContent = S.sys;
+
+  var at = Math.min(S.at, S.stops.length-1);
+  var togo = S.stops.length - 1 - at;
+  document.getElementById("nEl").textContent = togo;
+  document.getElementById("unitEl").innerHTML = (togo===1?"stop":"stops") + "<br>to go";
+
+  var r=document.getElementById("routeEl"); r.textContent="";
+  S.stops.forEach(function(s,i){
+    var state = i < at ? "done" : (i === at ? "done" : (i === at+1 ? "here" : "ahead"));
+    if(i===S.stops.length-1 && state==="ahead") state="ahead term";
+    if(i===S.stops.length-1 && state==="here") state="here term";
+    var row=el("div","stop "+state);
+    var rail=el("div","rail"); rail.appendChild(el("div","dot"));
+    var box=el("div");
+    box.appendChild(el("div","name", s.n));
+    box.appendChild(el("div","meta", s.m));
+    row.appendChild(rail); row.appendChild(box);
+    r.appendChild(row);
+    if(i === at && i < S.stops.length-1){
+      var y=el("div","youare"); y.appendChild(el("div","rail"));
+      var f=el("div"); f.appendChild(el("span","flag","You are here")); y.appendChild(f);
+      r.appendChild(y);
+    }
+  });
+
+  var list=document.getElementById("stops");
+  if(list.children.length !== S.stops.length){
+    list.textContent="";
+    S.stops.forEach(function(s,i){
+      var row=el("div","stoprow");
+      var b=el("button","at", String(i+1)); b.type="button";
+      b.addEventListener("click", function(){ S.at=i; save(); render(); });
+      var n=el("input"); n.type="text"; n.maxLength=26; n.value=s.n;
+      n.setAttribute("aria-label","Stop "+(i+1)+" name");
+      n.addEventListener("input", function(){ S.stops[i].n=n.value; save(); render(); });
+      var m=el("input"); m.type="text"; m.maxLength=40; m.value=s.m;
+      m.setAttribute("aria-label","Stop "+(i+1)+" note");
+      m.addEventListener("input", function(){ S.stops[i].m=m.value; save(); render(); });
+      row.appendChild(b); row.appendChild(n); row.appendChild(m);
+      list.appendChild(row);
+    });
+  }
+  Array.prototype.forEach.call(list.querySelectorAll(".at"), function(b,i){
+    b.setAttribute("aria-pressed", String(i === at));
+  });
+}
+
+function sync(){
+  ["chip","d1","d2","svc","who","sys"].forEach(function(k){ document.getElementById(k).value=S[k]; });
+}
+document.getElementById("apply").addEventListener("click",function(){
+  ["chip","d1","d2","svc","who","sys"].forEach(function(k){ S[k]=document.getElementById(k).value; });
+  save(); render();
+});
+document.getElementById("reset").addEventListener("click",function(){
+  S=JSON.parse(JSON.stringify(DEF)); save();
+  document.getElementById("stops").textContent=""; sync(); render();
+});
+sync(); render();
+</script>
+</body>
+</html>
