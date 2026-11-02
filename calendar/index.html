@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Days Left — a tear-off calendar lock screen</title>
+<meta name="description" content="A lock screen that shows the days you have left as squares you can count, not a number you have to read.">
+<meta name="color-scheme" content="light">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  /* Deliberate single visual world: risograph on newsprint. Painted explicitly. */
+  body{background:#cfcdc0;font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink)}
+  .page{max-width:1200px;margin:0 auto;padding:36px 22px 70px}
+  .mast{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 20px;margin-bottom:28px}
+  .mast h1{font-family:'Archivo Black',Archivo,sans-serif;font-size:30px;letter-spacing:-.02em}
+  .mast h1 em{font-style:normal;color:var(--pink)}
+  .mast p{color:#3c4256;font-size:15px;max-width:60ch;font-weight:500}
+
+  .frame{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:38px;align-items:start}
+  @media (max-width:880px){.frame{grid-template-columns:minmax(0,1fr)}}
+
+  /* phone */
+  .device{width:100%;max-width:330px;margin:0 auto;aspect-ratio:1170/2532;
+          border:3px solid var(--ink);border-radius:26px;overflow:hidden}
+  .device .sheet{width:100%;height:100%;padding:17% 8% 10.7%;display:flex;flex-direction:column}
+  .device .kicker{font-size:7px}
+  .device .goal{font-size:25px;margin-top:6px}
+  .device .goal em{font-style:normal;color:var(--pink)}
+  .device .sub{font-size:7.5px;color:var(--ink-soft);margin-top:6px;font-weight:500}
+  .device .rule{margin:11px 0 10px;height:2px}
+  .device .big{display:flex;align-items:baseline;gap:6px}
+  .device .big b{font-family:'Archivo Black',Archivo,sans-serif;font-size:38px;line-height:.84;letter-spacing:-.045em}
+  .device .big i{font-style:normal;font-size:7.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+  .device .grid{gap:2.5px;margin-top:11px}
+  .device .cell{height:21px;font-size:6.5px;padding:1px 2px;border-width:1px}
+  .device .cell.torn::before{background:linear-gradient(to bottom right,transparent calc(50% - .7px),var(--torn) calc(50% - .7px),var(--torn) calc(50% + .7px),transparent calc(50% + .7px))}
+  .device .legend{display:flex;gap:9px;margin-top:7px;font-size:6px;color:var(--mute);font-weight:600}
+  .device .chip{display:inline-block;width:6px;height:6px;border:1px solid var(--ink);margin-right:3px}
+  .device .chip.p{background:var(--pink);border-color:var(--pink)}
+  .device .chip.b{background:var(--blue);border-color:var(--blue)}
+  .device .chip.t{border-color:var(--torn)}
+  .device .ms{margin-top:auto;padding-top:9px}
+  .device .ms .row{grid-template-columns:36px 1fr;padding:4.5px 0;font-size:7.5px;border-top-width:1px}
+  .device .ms .row:last-child{border-bottom-width:1px}
+  .device .foot{display:flex;justify-content:space-between;margin-top:7px;font-size:5.5px;
+                color:var(--mute);font-weight:600;letter-spacing:.16em;text-transform:uppercase}
+
+  /* controls */
+  .rail{display:flex;flex-direction:column;gap:22px;min-width:0}
+  .block{background:var(--paper);border:3px solid var(--ink);padding:20px}
+  .block h2{font-family:'Archivo Black',Archivo,sans-serif;font-size:17px;margin-bottom:3px}
+  .block .note{font-size:14px;color:#3c4256;margin-bottom:16px;font-weight:500}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .field label{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+  input[type=text],input[type=date]{font-family:inherit;font-size:15px;font-weight:500;color:var(--ink);
+    background:#fff;border:2px solid var(--ink);padding:9px 11px;width:100%;border-radius:0}
+  input:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+  .btnrow{display:flex;flex-wrap:wrap;gap:9px}
+  button{font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+         border:2px solid var(--ink);background:var(--paper);color:var(--ink);padding:10px 15px;cursor:pointer;border-radius:0}
+  button:hover{background:var(--ink);color:var(--paper)}
+  button.primary{background:var(--pink);border-color:var(--pink);color:#fff}
+  button.primary:hover{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .mlist{display:flex;flex-direction:column;gap:9px}
+  .mitem{display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;align-items:center}
+  .mitem .when{font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.04em}
+  .mitem .when.past{color:var(--torn)}
+  ol.howto{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:#3c4256;font-weight:500}
+  footer{margin-top:34px;border-top:3px solid var(--ink);padding-top:14px;display:flex;flex-wrap:wrap;
+         gap:8px 18px;justify-content:space-between;font-size:11px;font-weight:700;
+         letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+  footer a{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <h1>DAYS <em>LEFT</em></h1>
+    <p>A lock screen that shows what's left as squares you can count, not a number you have to read. Days tear off as they pass.</p>
+  </header>
+
+  <div class="frame">
+    <div class="device">
+      <div class="sheet"><div style="display:flex;flex-direction:column;height:100%">
+        <div class="kicker">Ship by</div>
+        <div class="goal" id="goalEl">DECOY<br><em>WORD PACKS</em></div>
+        <div class="sub" id="subEl">&nbsp;</div>
+        <div class="rule"></div>
+        <div class="big"><b id="leftEl">00</b><i id="ofEl">days left</i></div>
+        <div class="grid" id="grid"></div>
+        <div class="legend">
+          <span><i class="chip t"></i>torn off</span>
+          <span><i class="chip p"></i>today</span>
+          <span><i class="chip b"></i>milestone</span>
+        </div>
+        <div class="ms" id="msEl"></div>
+        <div class="foot"><span id="whoEl">&nbsp;</span><span id="spanEl">&nbsp;</span></div>
+      </div></div>
+    </div>
+
+    <div class="rail">
+      <section class="block">
+        <h2>What are you shipping?</h2>
+        <p class="note">Two lines on the screen, so keep each one short.</p>
+        <div class="field"><label for="l1">Line one</label><input type="text" id="l1" maxlength="18"></div>
+        <div class="field"><label for="l2">Line two (accent)</label><input type="text" id="l2" maxlength="18"></div>
+        <div class="field"><label for="sub">One line of detail</label><input type="text" id="sub" maxlength="54"></div>
+        <div class="field"><label for="due">Ship date</label><input type="date" id="due"></div>
+        <div class="field"><label for="who">Signature</label><input type="text" id="who" maxlength="18"></div>
+        <div class="btnrow">
+          <button class="primary" id="apply">Apply</button>
+          <button id="reset">Reset</button>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>Milestones</h2>
+        <p class="note">Spread across the run, the last one holding a few days spare. Rename them.</p>
+        <div class="mlist" id="mlist"></div>
+      </section>
+
+      <section class="block">
+        <h2>Put it on your phone</h2>
+        <ol class="howto">
+          <li>Open this on the phone and screenshot the panel. The top and bottom are left empty so the clock and the torch and camera buttons cover nothing.</li>
+          <li>Set the screenshot as your lock screen.</li>
+          <li>Re-shoot it when a milestone lands — the block of squares should visibly shrink.</li>
+        </ol>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <span>Risograph on newsprint · one HTML file</span>
+    <span><a href="../">T-Minus, the digit version</a></span>
+  </footer>
+</div>
+
+<script>
+var KEY="dayzleft.v1";
+var DEF={l1:"DECOY", l2:"WORD PACKS", sub:"Custom word packs, live for players",
+         due:"2026-12-31", who:"K. Sojitra",
+         titles:["Pack format decided","Editor + import working","Playtest with 6 players","Ship — 3 days spare"]};
+var S=load();
+function load(){ try{var v=JSON.parse(localStorage.getItem(KEY)); if(v&&v.due&&Array.isArray(v.titles)) return v;}catch(e){} return JSON.parse(JSON.stringify(DEF)); }
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+
+var MON=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+function pad(n){return (n<10?"0":"")+n;}
+function midnight(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+function parseDue(){ var p=S.due.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+function label(d){ return MON[d.getMonth()]+" "+pad(d.getDate()); }
+
+function milestones(start, due){
+  var span = midnight(due) - midnight(start), day=86400000;
+  var fr=[0, .34, .68];
+  var out=fr.map(function(f,i){ return {at:new Date(midnight(start)+Math.round(span*f/day)*day), title:S.titles[i]||("Step "+(i+1))}; });
+  out.push({at:new Date(Math.max(midnight(start), midnight(due)-3*day)), title:S.titles[3]||"Ship"});
+  return out;
+}
+
+function render(){
+  var today=new Date(), due=parseDue();
+  var start=new Date(today.getFullYear(), today.getMonth(), 1);
+  if(midnight(due) < midnight(today)) due=today;
+  var day=86400000;
+  var total=Math.round((midnight(due)-midnight(start))/day)+1;
+  var left =Math.max(0, Math.round((midnight(due)-midnight(today))/day));
+
+  document.getElementById("goalEl").innerHTML =
+    (S.l1||"").replace(/</g,"&lt;") + "<br><em>" + (S.l2||"").replace(/</g,"&lt;") + "</em>";
+  document.getElementById("subEl").textContent =
+    (S.sub||"") + " · " + MON[due.getMonth()].charAt(0)+MON[due.getMonth()].slice(1).toLowerCase() + " " + due.getDate() + " " + due.getFullYear();
+  document.getElementById("leftEl").textContent = left;
+  document.getElementById("ofEl").innerHTML = "days left<br>of " + total;
+  document.getElementById("whoEl").textContent = S.who||"";
+  document.getElementById("spanEl").textContent = MON[start.getMonth()]+"–"+MON[due.getMonth()]+" "+due.getFullYear();
+
+  var ms=milestones(start,due), markSet={};
+  ms.forEach(function(m){ markSet[midnight(m.at)]=1; });
+
+  var g=document.getElementById("grid"); g.textContent="";
+  for(var i=0;i<total;i++){
+    var t=midnight(start)+i*day, d=new Date(t);
+    var cls="cell";
+    if(t < midnight(today)) cls+=" torn";
+    else if(t === midnight(today)) cls+=" today";
+    else if(markSet[t]) cls+=" mark";
+    else cls+=" left";
+    var el=document.createElement("div"); el.className=cls;
+    var s=document.createElement("span"); s.textContent=d.getDate();
+    el.appendChild(s); g.appendChild(el);
+  }
+
+  var box=document.getElementById("msEl"); box.textContent="";
+  ms.forEach(function(m){
+    var r=document.createElement("div");
+    r.className="row" + (midnight(m.at) < midnight(today) ? " done" : "");
+    var d=document.createElement("span"); d.className="d"; d.textContent=label(m.at);
+    var t=document.createElement("span"); t.className="t"; t.textContent=m.title;
+    r.appendChild(d); r.appendChild(t); box.appendChild(r);
+  });
+
+  var list=document.getElementById("mlist");
+  if(list.children.length !== ms.length){
+    list.textContent="";
+    ms.forEach(function(m,i){
+      var row=document.createElement("div"); row.className="mitem";
+      var w=document.createElement("span"); w.className="when";
+      var inp=document.createElement("input"); inp.type="text"; inp.maxLength=30; inp.value=m.title;
+      inp.setAttribute("aria-label","Milestone "+(i+1)+" name");
+      inp.addEventListener("input", function(){ S.titles[i]=inp.value; save(); render(); });
+      row.appendChild(w); row.appendChild(inp); list.appendChild(row);
+    });
+  }
+  ms.forEach(function(m,i){
+    var w=list.children[i].querySelector(".when");
+    w.textContent=label(m.at);
+    w.className="when" + (midnight(m.at) < midnight(today) ? " past" : "");
+  });
+}
+
+function sync(){
+  document.getElementById("l1").value=S.l1; document.getElementById("l2").value=S.l2;
+  document.getElementById("sub").value=S.sub; document.getElementById("due").value=S.due;
+  document.getElementById("who").value=S.who;
+}
+document.getElementById("apply").addEventListener("click",function(){
+  S.l1=document.getElementById("l1").value; S.l2=document.getElementById("l2").value;
+  S.sub=document.getElementById("sub").value; S.who=document.getElementById("who").value;
+  var d=document.getElementById("due").value; if(d) S.due=d;
+  save(); render();
+});
+document.getElementById("reset").addEventListener("click",function(){
+  S=JSON.parse(JSON.stringify(DEF)); save();
+  document.getElementById("mlist").textContent=""; sync(); render();
+});
+sync(); render();
+setInterval(render, 60000);
+</script>
+</body>
+</html>

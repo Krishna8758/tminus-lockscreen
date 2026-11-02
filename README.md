@@ -3,7 +3,13 @@
 A deadline you can see from the lock screen. Set the target, the plan builds
 itself backward from it, and the count runs live.
 
-**Live:** https://krishna8758.github.io/tminus-lockscreen/
+**Live:** https://tminus-lockscreen.vercel.app/
+
+Two lock screens, two ways of reading a deadline:
+
+- `/` — **T-Minus**: the digit version. `T−21 DAYS` plus a live `HH:MM:SS`.
+- `/calendar/` — **Days Left**: the tear-off version. The days left are squares
+  you count, not a number you read. Risograph on newsprint.
 
 ## What it does
 

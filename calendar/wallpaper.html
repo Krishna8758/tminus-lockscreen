@@ -1,0 +1,63 @@
+<!doctype html><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Archivo+Black&display=swap">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  html,body{width:1170px;height:2532px}
+  .sheet{width:1170px;height:2532px;padding:430px 96px 270px}
+  .wrap{display:flex;flex-direction:column;height:100%}
+  .kicker{font-size:25px}
+  .goal{font-size:88px;margin-top:22px}
+  .goal em{font-style:normal;color:var(--pink)}
+  .sub{font-size:27px;color:var(--ink-soft);margin-top:22px;font-weight:500}
+  .rule{margin:38px 0 34px}
+  .big{display:flex;align-items:baseline;gap:22px}
+  .big b{font-family:'Archivo Black',Archivo,sans-serif;font-size:132px;line-height:.86;letter-spacing:-.04em}
+  .big i{font-style:normal;font-size:31px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+  .grid{gap:9px;margin-top:38px}
+  .cell{height:76px;font-size:21px;padding:6px 8px}
+  .legend{display:flex;gap:30px;margin-top:24px;font-size:20px;color:var(--mute);font-weight:600}
+  .chip{display:inline-block;width:20px;height:20px;border:2px solid var(--ink);vertical-align:-3px;margin-right:9px}
+  .chip.p{background:var(--pink);border-color:var(--pink)}
+  .chip.b{background:var(--blue);border-color:var(--blue)}
+  .chip.t{border-color:var(--torn)}
+  .ms{margin-top:auto;padding-top:32px}
+  .ms .row{grid-template-columns:128px 1fr;padding:15px 0;font-size:27px}
+  .foot{display:flex;justify-content:space-between;margin-top:24px;font-size:20px;color:var(--mute);font-weight:600;letter-spacing:.18em;text-transform:uppercase}
+</style>
+<div class="sheet"><div class="wrap">
+  <div class="kicker">Ship by</div>
+  <div class="goal">DECOY<br><em>WORD PACKS</em></div>
+  <div class="sub">Custom word packs, live for players · Dec 31 2026</div>
+  <div class="rule"></div>
+  <div class="big"><b>59</b><i>days left<br>of 61</i></div>
+  <div class="grid" id="g"></div>
+  <div class="legend">
+    <span><i class="chip t"></i>torn off</span>
+    <span><i class="chip p"></i>today</span>
+    <span><i class="chip b"></i>milestone</span>
+  </div>
+  <div class="ms">
+    <div class="row done"><span class="d">NOV 02</span><span class="t">Pack format decided</span></div>
+    <div class="row"><span class="d">NOV 16</span><span class="t">Editor + import working</span></div>
+    <div class="row"><span class="d">DEC 07</span><span class="t">Playtest with 6 players</span></div>
+    <div class="row"><span class="d">DEC 28</span><span class="t">Ship — 3 days spare</span></div>
+  </div>
+  <div class="foot"><span>K. Sojitra</span><span>Nov–Dec 2026</span></div>
+</div></div>
+<script>
+  var MARK = {"11-16":1, "12-7":1, "12-28":1};
+  var g = document.getElementById("g"), out = "";
+  function days(m,y){ return new Date(y,m,0).getDate(); }
+  [[11,2026],[12,2026]].forEach(function(my){
+    var m=my[0], y=my[1];
+    for(var d=1; d<=days(m,y); d++){
+      var cls="cell";
+      if(m===11 && d<2) cls+=" torn";
+      else if(m===11 && d===2) cls+=" today";
+      else if(MARK[m+"-"+d]) cls+=" mark";
+      else cls+=" left";
+      out += '<div class="'+cls+'"><span>'+d+'</span></div>';
+    }
+  });
+  g.innerHTML = out;
+</script>
