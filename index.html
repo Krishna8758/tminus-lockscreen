@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A live T-minus countdown that builds a milestone plan backward from your deadline and renders as a phone lock screen.">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="T-Minus Lock Screen">
+<meta property="og:description" content="Set a deadline. The plan builds itself backward. The count runs live.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23070d14'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='18' font-weight='700' fill='%2336e0ff' text-anchor='middle'%3ET%3C/text%3E%3C/svg%3E">
+<title>T-Minus Lock Screen</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  /* Deliberate single visual world: a lock screen is a dark object.
+     Every color is painted explicitly so the page holds on any host ground. */
+  :root{
+    --ground:#05090f;
+    --panel:#070d14;
+    --grid:#0f2234;
+    --grid-major:#13304a;
+    --edge:#1d4a6b;
+    --ink:#e6f4ff;
+    --ink-soft:#9fc4da;
+    --dim:#5f8aa8;
+    --dimmer:#3f6d8e;
+    --cy:#36e0ff;
+    --done:#4ade80;
+    --active:#ffb545;
+    --mono:'IBM Plex Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+    --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--ground);color:var(--ink);
+    font-family:var(--sans);line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1180px;margin:0 auto;padding:40px 24px 72px}
+
+  /* ---- masthead ---- */
+  .mast{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px;
+        border-bottom:1px solid var(--edge);padding-bottom:18px;margin-bottom:34px}
+  .mast h1{font-family:var(--mono);font-weight:600;font-size:19px;letter-spacing:.3em;
+           text-transform:uppercase;margin:0;color:var(--ink)}
+  .mast h1 em{font-style:normal;color:var(--cy)}
+  .mast p{margin:0;color:var(--dim);font-size:14px;max-width:62ch}
+
+  /* ---- two-column frame ---- */
+  .frame{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:40px;align-items:start}
+  @media (max-width:860px){.frame{grid-template-columns:minmax(0,1fr);gap:34px}}
+
+  /* ---- the device ---- */
+  .device{
+    position:relative;aspect-ratio:1170/2532;width:100%;max-width:340px;margin:0 auto;
+    border:1px solid var(--edge);border-radius:30px;overflow:hidden;
+    background-color:var(--panel);
+    background-image:
+      linear-gradient(var(--grid) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+      linear-gradient(var(--grid-major) 1px,transparent 1px),
+      linear-gradient(90deg,var(--grid-major) 1px,transparent 1px),
+      radial-gradient(ellipse 85% 50% at 50% 42%,#0d2740 0%,#070d14 72%);
+    background-size:18px 18px,18px 18px,90px 90px,90px 90px,100% 100%;
+  }
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;padding:26px 22px 22px}
+  .sys{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--dimmer);
+       display:flex;justify-content:space-between}
+  .clock{font-family:var(--mono);font-weight:300;font-size:52px;line-height:1;letter-spacing:-.02em;
+         color:var(--ink);margin-top:14px;text-align:center;font-variant-numeric:tabular-nums}
+  .clockday{font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--dim);
+            text-align:center;margin-top:6px;text-transform:uppercase}
+
+  .core{margin-top:34px}
+  .eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.34em;color:var(--dim);text-transform:uppercase}
+  .tbig{font-family:var(--mono);font-weight:700;font-size:72px;line-height:.9;letter-spacing:-.04em;
+        color:#fff;text-shadow:0 0 44px rgba(54,224,255,.4);font-variant-numeric:tabular-nums}
+  .tbig .mark{color:var(--cy)}
+  .tunit{font-family:var(--mono);font-size:13px;letter-spacing:.3em;color:var(--cy);margin-top:4px}
+  .hms{font-family:var(--mono);font-size:15px;letter-spacing:.14em;color:var(--ink-soft);
+       margin-top:12px;font-variant-numeric:tabular-nums}
+  .hms .sep{color:var(--dimmer)}
+  .tgt{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--dim);
+       margin-top:12px;line-height:1.8;text-transform:uppercase}
+
+  .meter{margin-top:20px}
+  .meterhead{display:flex;justify-content:space-between;font-family:var(--mono);
+             font-size:9px;letter-spacing:.2em;color:var(--dim);margin-bottom:6px;text-transform:uppercase}
+  .track{height:9px;border:1px solid #24567c;display:flex;gap:2px;padding:1.5px}
+  .seg{flex:1;background:#102c42}
+  .seg.on{background:var(--cy);box-shadow:0 0 10px rgba(54,224,255,.55)}
+
+  .plan{margin-top:26px;border-top:1px solid var(--edge);padding-top:16px}
+  .plan h2{font-family:var(--mono);font-size:9px;letter-spacing:.34em;color:var(--dim);
+           font-weight:400;margin:0 0 12px;text-transform:uppercase}
+  .mrow{display:grid;grid-template-columns:52px 22px minmax(0,1fr);gap:8px;align-items:baseline;
+        font-family:var(--mono);font-size:11px;margin-bottom:9px}
+  .mrow .md{color:var(--dim);font-size:9.5px;letter-spacing:.08em}
+  .mrow .ms{text-align:center}
+  .mrow .mt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .is-done .ms{color:var(--done)}   .is-done .mt{color:var(--ink-soft)}
+  .is-now  .ms{color:var(--active)} .is-now  .mt{color:#fff}
+  .is-todo .ms{color:#2f5b7d}       .is-todo .mt{color:var(--dim)}
+  .stamp{margin-top:auto;display:flex;justify-content:space-between;
+         font-family:var(--mono);font-size:8.5px;letter-spacing:.24em;color:var(--dimmer);text-transform:uppercase}
+
+  .lapsed .tbig{color:var(--active);text-shadow:0 0 44px rgba(255,181,69,.35)}
+  .lapsed .tunit{color:var(--active)}
+
+  /* ---- control rail ---- */
+  .rail{display:flex;flex-direction:column;gap:28px;min-width:0}
+  .block{border:1px solid var(--edge);background:var(--panel);padding:22px}
+  .block > h2{font-family:var(--mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+              color:var(--dim);font-weight:400;margin:0 0 4px}
+  .block > p.note{margin:0 0 18px;font-size:13px;color:var(--dim)}
+
+  .field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+  .field label{font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+               text-transform:uppercase;color:var(--dim)}
+  input[type="text"],input[type="datetime-local"]{
+    font-family:var(--mono);font-size:14px;color:var(--ink);background:#09131d;
+    border:1px solid #1d4a6b;padding:10px 12px;width:100%;border-radius:0;
+  }
+  input::placeholder{color:var(--dimmer)}
+  input:focus-visible,button:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+  .localnote{font-family:var(--mono);font-size:11px;color:var(--dimmer);letter-spacing:.06em}
+
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+  button{
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--ink);background:#0d1e2d;border:1px solid var(--edge);
+    padding:10px 16px;cursor:pointer;border-radius:0;
+  }
+  button:hover{border-color:var(--cy);color:#fff}
+  button.primary{background:var(--cy);border-color:var(--cy);color:#04141c;font-weight:600}
+  button.primary:hover{background:#6aeaff;border-color:#6aeaff;color:#04141c}
+
+  .mlist{display:flex;flex-direction:column;gap:10px}
+  .mitem{display:grid;grid-template-columns:76px minmax(0,1fr) 62px;gap:12px;align-items:center}
+  .mitem .when{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.06em}
+  .pill{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+        text-align:center;padding:4px 0;border:1px solid currentColor}
+  .pill.done{color:var(--done)} .pill.now{color:var(--active)} .pill.todo{color:#2f5b7d}
+  @media (max-width:420px){
+    .mitem{grid-template-columns:minmax(0,1fr) 62px;grid-template-areas:"when pill" "name name"}
+    .mitem .when{grid-area:when}.mitem .pill{grid-area:pill}.mitem input{grid-area:name}
+  }
+
+  .howto{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+  .howto li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;font-size:13.5px;color:var(--ink-soft)}
+  .howto .n{font-family:var(--mono);font-size:10px;color:var(--cy);letter-spacing:.1em;padding-top:3px}
+
+  footer{margin-top:44px;border-top:1px solid var(--edge);padding-top:16px;
+         font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dimmer);
+         text-transform:uppercase;display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-between}
+
+  @media (prefers-reduced-motion:no-preference){
+    .tick{animation:blink 2s steps(1,end) infinite}
+    @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:.28}}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <h1>T<em>&minus;</em>Minus</h1>
+    <p>A deadline you can see from the lock screen. Set the target, the plan builds itself backward from it, and the count runs live.</p>
+  </header>
+
+  <div class="frame">
+    <!-- live device -->
+    <div class="device" id="device">
+      <div class="screen">
+        <div class="sys"><span id="sysLeft">T-MINUS</span><span>REV 02</span></div>
+        <div class="clock" id="clock">--:--</div>
+        <div class="clockday" id="clockday">&nbsp;</div>
+
+        <div class="core">
+          <div class="eyebrow">Time remaining</div>
+          <div class="tbig" id="tbig">T<span class="mark">&minus;</span>00</div>
+          <div class="tunit" id="tunit">DAYS</div>
+          <div class="hms" id="hms">00<span class="sep">:</span>00<span class="sep tick">:</span>00</div>
+          <div class="tgt" id="tgt">&nbsp;</div>
+        </div>
+
+        <div class="meter">
+          <div class="meterhead"><span>Milestones</span><span id="mcount">00 / 04</span></div>
+          <div class="track" id="track"></div>
+        </div>
+
+        <div class="plan">
+          <h2>Working backward</h2>
+          <div id="planRows"></div>
+          <div class="stamp"><span id="stampName">&nbsp;</span><span id="stampPct">0%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- controls -->
+    <div class="rail">
+      <section class="block">
+        <h2>Target</h2>
+        <p class="note">The one date everything else is measured against.</p>
+        <div class="field">
+          <label for="what">What you're counting down to</label>
+          <input type="text" id="what" maxlength="46" placeholder="Submit the countdown lock screen">
+        </div>
+        <div class="field">
+          <label for="when">Deadline</label>
+          <input type="datetime-local" id="when">
+          <span class="localnote" id="localnote">&nbsp;</span>
+        </div>
+        <div class="field">
+          <label for="who">Signature on the screen</label>
+          <input type="text" id="who" maxlength="18" placeholder="K.SOJITRA">
+        </div>
+        <div class="btnrow">
+          <button class="primary" id="apply">Apply</button>
+          <button id="rebuild">Rebuild plan</button>
+          <button id="reset">Reset to challenge</button>
+        </div>
+      </section>
+
+      <section class="block">
+        <h2>The plan</h2>
+        <p class="note">Four checkpoints spaced across the run, the last one holding a day of buffer. Rename any of them.</p>
+        <div class="mlist" id="mlist"></div>
+      </section>
+
+      <section class="block">
+        <h2>Put it on your phone</h2>
+        <ol class="howto">
+          <li><span class="n">01</span><span>Open this page on the phone and screenshot the panel above. The top and bottom are left empty on purpose, so the system clock and the camera and torch buttons cover nothing.</span></li>
+          <li><span class="n">02</span><span>Set the screenshot as your lock screen wallpaper.</span></li>
+          <li><span class="n">03</span><span>Re-shoot it whenever a checkpoint falls. The number is the point &mdash; it only works if it's current.</span></li>
+        </ol>
+      </section>
+    </div>
+  </div>
+
+  <footer>
+    <span>AI Skills Studio &middot; November challenge</span>
+    <span id="footTarget">Target &middot; Nov 23 2026 &middot; 23:59 PT</span>
+  </footer>
+</div>
+
+<script>
+  // Nov 23 2026, 23:59 PT. PST is UTC-8 (DST ended Nov 1 2026).
+  var CHALLENGE = {
+    what: "Submit the countdown lock screen",
+    who: "K.SOJITRA",
+    target: Date.UTC(2026, 10, 24, 7, 59, 0),
+    opened: Date.UTC(2026, 10, 2, 0, 0, 0),
+    titles: ["Pick the deadline", "Design and build", "Write it up", "Submit — with buffer"],
+    isChallenge: true
+  };
+  var KEY = "tminus.v2";
+  var S = load();
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(raw){
+        var v = JSON.parse(raw);
+        if(v && typeof v.target === "number" && Array.isArray(v.titles)) return v;
+      }
+    }catch(e){}
+    return JSON.parse(JSON.stringify(CHALLENGE));
+  }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+  var pad = function(n){ return (n<10?"0":"") + n; };
+  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function shortDate(ms){ var d=new Date(ms); return MON[d.getMonth()].toUpperCase()+" "+pad(d.getDate()); }
+  function longDate(ms){ var d=new Date(ms);
+    return MON[d.getMonth()]+" "+d.getDate()+" "+d.getFullYear()+" · "+pad(d.getHours())+":"+pad(d.getMinutes()); }
+  // The challenge deadline is stated in PT; everything else is the viewer's own clock.
+  function targetLabel(){
+    return S.isChallenge ? "Nov 23 2026 · 23:59 PT" : longDate(S.target);
+  }
+  function toLocalInput(ms){ var d=new Date(ms);
+    return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes()); }
+
+  // Checkpoints spaced across the run; the last sits a day before the target.
+  function checkpoints(){
+    var span = S.target - S.opened;
+    var day  = 86400000;
+    var marks = [0, 0.34, 0.66];
+    var out = marks.map(function(f,i){ return { at: S.opened + span*f, title: S.titles[i] || "Checkpoint "+(i+1) }; });
+    out.push({ at: Math.max(S.opened, S.target - day), title: S.titles[3] || "Submit" });
+    return out;
+  }
+
+  function buildMilestoneEditor(){
+    var list = document.getElementById("mlist");
+    list.textContent = "";
+    checkpoints().forEach(function(c, i){
+      var row = document.createElement("div"); row.className = "mitem";
+      var when = document.createElement("span"); when.className = "when"; when.textContent = shortDate(c.at);
+      var inp = document.createElement("input"); inp.type = "text"; inp.maxLength = 34; inp.value = c.title;
+      inp.setAttribute("aria-label", "Checkpoint " + (i+1) + " name");
+      inp.addEventListener("input", function(){ S.titles[i] = inp.value; save(); render(); });
+      var pill = document.createElement("span"); pill.className = "pill"; pill.id = "pill" + i;
+      row.appendChild(when); row.appendChild(inp); row.appendChild(pill);
+      list.appendChild(row);
+    });
+  }
+
+  function render(){
+    var now = Date.now();
+    var left = S.target - now;
+    var lapsed = left <= 0;
+    var abs = Math.abs(left);
+
+    var days = Math.floor(abs / 86400000);
+    var hrs  = Math.floor(abs / 3600000) % 24;
+    var mins = Math.floor(abs / 60000) % 60;
+    var secs = Math.floor(abs / 1000) % 60;
+
+    document.getElementById("device").classList.toggle("lapsed", lapsed);
+    document.getElementById("sysLeft").textContent = lapsed ? "T-PLUS" : "T-MINUS";
+    document.getElementById("tbig").innerHTML =
+      "T<span class=\"mark\">" + (lapsed ? "+" : "−") + "</span>" + pad(days);
+    document.getElementById("tunit").textContent = days === 1 ? "DAY" : "DAYS";
+    document.getElementById("hms").innerHTML =
+      pad(hrs) + "<span class=\"sep\">:</span>" + pad(mins) +
+      "<span class=\"sep tick\">:</span>" + pad(secs);
+
+    var d = new Date(now);
+    document.getElementById("clock").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
+    document.getElementById("clockday").textContent =
+      ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()] +
+      " " + MON[d.getMonth()] + " " + d.getDate();
+
+    document.getElementById("tgt").innerHTML =
+      "Target &middot; " + targetLabel() + "<br>" + (S.what || "Deadline");
+
+    var cps = checkpoints();
+    var reached = cps.filter(function(c){ return c.at <= now; }).length;
+    var nextIdx = cps.findIndex(function(c){ return c.at > now; });
+
+    document.getElementById("mcount").textContent = pad(reached) + " / " + pad(cps.length);
+
+    var track = document.getElementById("track");
+    track.textContent = "";
+    cps.forEach(function(_, i){
+      var s = document.createElement("i");
+      s.className = "seg" + (i < reached ? " on" : "");
+      track.appendChild(s);
+    });
+
+    var rows = document.getElementById("planRows");
+    rows.textContent = "";
+    cps.forEach(function(c, i){
+      var state = c.at <= now ? "done" : (i === nextIdx ? "now" : "todo");
+      var r = document.createElement("div");
+      r.className = "mrow is-" + state;
+      var dd = document.createElement("span"); dd.className = "md"; dd.textContent = shortDate(c.at);
+      var ss = document.createElement("span"); ss.className = "ms";
+      ss.textContent = state === "done" ? "[x]" : (state === "now" ? "[>]" : "[ ]");
+      var tt = document.createElement("span"); tt.className = "mt"; tt.textContent = c.title;
+      r.appendChild(dd); r.appendChild(ss); r.appendChild(tt);
+      rows.appendChild(r);
+
+      var pill = document.getElementById("pill" + i);
+      if(pill){
+        pill.className = "pill " + state;
+        pill.textContent = state === "done" ? "done" : (state === "now" ? "next" : "ahead");
+      }
+    });
+
+    var span = S.target - S.opened;
+    var pct = span > 0 ? Math.min(100, Math.max(0, Math.round((now - S.opened) / span * 100))) : 100;
+    document.getElementById("stampPct").textContent = pct + "%";
+    document.getElementById("stampName").textContent = S.who || "";
+    document.getElementById("footTarget").textContent = "Target · " + targetLabel();
+  }
+
+  function syncInputs(){
+    document.getElementById("what").value = S.what || "";
+    document.getElementById("who").value  = S.who || "";
+    document.getElementById("when").value = toLocalInput(S.target);
+    document.getElementById("localnote").textContent =
+      S.isChallenge ? "Nov 23 2026, 23:59 PT — shown above in your local time."
+                    : "Interpreted in your local time zone.";
+  }
+
+  document.getElementById("apply").addEventListener("click", function(){
+    var w = document.getElementById("when").value;
+    if(w){
+      var t = new Date(w).getTime();
+      if(!isNaN(t)){
+        if(t !== S.target){ S.isChallenge = false; }
+        S.target = t;
+        if(S.opened >= S.target) S.opened = Date.now();
+      }
+    }
+    S.what = document.getElementById("what").value.trim();
+    S.who  = document.getElementById("who").value.trim();
+    save(); buildMilestoneEditor(); syncInputs(); render();
+  });
+
+  document.getElementById("rebuild").addEventListener("click", function(){
+    S.opened = Date.now();
+    save(); buildMilestoneEditor(); render();
+  });
+
+  document.getElementById("reset").addEventListener("click", function(){
+    S = JSON.parse(JSON.stringify(CHALLENGE));
+    save(); buildMilestoneEditor(); syncInputs(); render();
+  });
+
+  buildMilestoneEditor();
+  syncInputs();
+  render();
+  setInterval(render, 1000);
+</script>
+</body>
+</html>
